@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShareHandy</title>
+    <!--
+        <link rel="stylesheet" href="./style.css"> 
+        <script src="https://www.gstatic.com/firebasejs/ui/6.0.0/firebase-ui-auth.js"></script>
+        <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/6.0.0/firebase-ui-auth.css" />
+    -->
+</head>
+<body>
+    <div id="header"></div>
+    <div id="container">
+        <div id="init">
+            <div>init</div>
+            <video id="init-local-video"></video>
+            <button id="join">参加</button>
+        </div>
+        <div id="main">
+            <div>main</div>
+            <div id="stream">
+                <div class="member">
+                    <video></video>
+                </div>    
+            </div>
+            <div id="pointers"></div>
+        </div>
+    </div>
+    <script src="//cdn.webrtc.ecl.ntt.com/skyway-4.4.3.js"></script>
+    <script src="./key/key.js"></script>
+    <script src="./key/firebase.js" type="module"></script>
+    <script src="./firebase/firebaseAuth.js"></script>
+    <script src="./script.js"></script>
+    <script src="./test.js"></script>
+</body>
+</html>
