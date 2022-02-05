@@ -1,29 +1,40 @@
-// Initialize the FirebaseUI Widget using Firebase.
-//var ui = new firebaseui.auth.AuthUI(firebase.auth());
-console.log(auth);
-//if()
-const userInfo = signInWithPopup(auth, provider)
-  .then((result) => {
-    // This gives you a Google Access Token. You can use it to access the Google API.
-    const credential = GoogleAuthProvider.credentialFromResult(result);
-    const token = credential.accessToken;
-    // The signed-in user info.
-    console.log(result);
-    // ...
-    let userInfo = result.user;
-    return{
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.6/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.6.6/firebase-analytics.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut} from "https://www.gstatic.com/firebasejs/9.6.6/firebase-auth.js";
+
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+
+const auth = getAuth();
+const provider = new GoogleAuthProvider();
+async function GoogleAuth(){
+  if(auth.currentUser != null){
+    let userInfo = auth.currentUser;
+    return {
+      name: userInfo.displayName,
+      photoURL: userInfo.photoURL,
+      uid : userInfo.uid
+    }
+  }else{
+    try{
+      let res = await signInWithPopup(auth,provider);
+      console.log(res);
+      let userInfo = res.user;
+      return {
         name: userInfo.displayName,
         photoURL: userInfo.photoURL,
         uid : userInfo.uid
+      }
+    }catch(err){
+      console.error(err);
+      return {}
     }
-  }).catch((error) => {
-    // Handle Errors here.
-    const errorCode = error.code;
-    const errorMessage = error.message;
-    // The email of the user's account used.
-    const email = error.email;
-    // The AuthCredential type that was used.
-    const credential = GoogleAuthProvider.credentialFromError(error);
-    // ...
-    return {};
-  });
+  
+  }
+}
+window.FirebaseAuth = auth;
+window.FirebaseSignIn = GoogleAuth;
+window.FirebaseSignOut = signOut;
