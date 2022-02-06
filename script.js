@@ -15,7 +15,7 @@ window.onload = async()=>{
     init_local_video.playsInline = true;
     await init_local_video.play();
     stream = localStream;
-    authInfo = FirebaseAuth.currentUser;
+    authInfo = Firebase.Auth.auth.currentUser;
     initAccountStatus("",true);
     document.getElementById("account").addEventListener("click",initAccountStatus);
 }
@@ -34,20 +34,35 @@ function getEmptyStream(){
     return new MediaStream([vstream.getTracks()[0],astream.getTracks()[0]]);
 }
 async function initAccountStatus(elem, onlyDisplay){
-    if(FirebaseAuth.currentUser==null){
-        if(!onlyDisplay)authInfo = await FirebaseSignIn();
+    if(Firebase.Auth.auth.currentUser==null){
+        //サインイン
+        if(!onlyDisplay)authInfo = await Firebase.Auth.signIn();
+        //エラー発生時は何もしない
         if(authInfo ==null){return;}
+        //ログイン情報を表示
         document.querySelector("#account div").style.backgroundImage = `url("${authInfo.photoURL}")`;
         document.querySelector("#account span").innerText = authInfo.name;
+
         document.getElementById("join").addEventListener("click",joinRoom);
         let digits = 36 ** 5;
         peerId = authInfo.uid + "-"+ (new Date().getTime()).toString(36)+ (Math.floor(Math.random())*digits).toString(36);
         console.log(peerId);
         window.peer = new Peer(peerId,{key: window.__SKYWAY_KEY__,debug:1});
         console.log(peer);
-    
+        let profile = await Firebase.RTDB.get("profile/"+authInfo.uid);
+        console.log(!("name" in profile));
+        if(!("name" in profile)){
+            profile = authInfo;
+        }
+        console.log(authInfo);
+        console.log(profile);
+        document.getElementById("input-name").value = profile.name;
+        console.log(`[type=radio][value=${authInfo.color}]`);
+        document.querySelector(`[type=radio][value=${profile.color}]`).checked=true;
+
+        console.log(profile);
     }else{
-        await FirebaseSignOut(FirebaseAuth);
+        await Firebase.Auth.signOut(Firebase.Auth.auth);
         document.querySelector("#account div").style.backgroundImage = `url("${NO_IMAGE}")`;
         document.querySelector("#account span").innerText = "ログイン";
         document.getElementById("join").removeEventListener("click",joinRoom);
@@ -58,10 +73,16 @@ async function initAccountStatus(elem, onlyDisplay){
         authInfo = null;
     }
 }
-function joinRoom(){
+async function joinRoom(){
     var RoomId = "test";
     if(authInfo==null){return false;}
-    window.Room = new ROOM(RoomId,NO_STREAM);
+    let profile = {
+        name: document.getElementById("input-name").value,
+        photoURL:authInfo.photoURL,
+        color: document.querySelector("input[name=input-color]:checked").value
+    }
+    await Firebase.RTDB.set("profile/"+authInfo.uid,profile);
+    window.Room = new ROOM(RoomId,localStream);
     document.getElementById("join").removeEventListener("click",joinRoom);
 
 }
@@ -71,13 +92,20 @@ class ML{
         return Object.keys(this.list);
     }
     static get l(){ return this.list};
-    static addMember(uid){
+    static async addMember(uid){
         if(uid in this.list){
             return false;
         }
         this.list[uid] = new Member(uid);
-        for(let mem of this.memberList){
+        await this.list[uid].initName();
+        for(let key of this.memberList){
+            let mem = this.list[key];
             //mem.addCanvas()
+            console.log()
+            if(mem.uid!=uid){
+                mem.canvas.set(uid,)
+            }
+            mem.addCanvas(uid);
             console.log(mem);
         }
         return true;
@@ -93,7 +121,7 @@ const NO_IMAGE = "/img/noimage.png";
 class Member{
     currentStream = null;
     peers = [];
-    streams ={};
+    streams =new Map();
     isStream = false;
     name   = "No Name";
     uid = "";
@@ -101,7 +129,7 @@ class Member{
     color  = "gray";
     pointer=null;
     video  = null;
-    canvas = {};
+    canvas = new Map();
     element= {};
     aspectRatio=1;
     constructor(uid){
@@ -120,6 +148,9 @@ class Member{
         this.element.video.muted = true;
         this.element.video.srcObject=stream;
         this.element.video.playsInline = true;
+        this.element.videoDiv = document.createElement("div");
+        this.element.videoDiv.classList.add("video");
+        this.element.videoDiv.appendChild(this.element.video);
         
 
         //Div
@@ -137,10 +168,14 @@ class Member{
         this.element.footer.appendChild(this.element.name);
 
         //Merge
-        this.element.div.appendChild(this.element.video);
+        this.element.div.appendChild(this.element.videoDiv);
         this.element.div.appendChild(this.element.footer);
         this.video = this.element.video;
         document.getElementById("stream").appendChild(this.element.div);
+
+        //TODO Videoオブザーバー設置
+
+        this.addCanvas("background",this);
     }
     addPeer(peerId){
         this.peers.push(peerId);
@@ -151,41 +186,102 @@ class Member{
     }
     async initVideo(stream){
         console.log(stream);
-        this.video.srcObject = stream;
-        this.currentStream = stream;
-        await this.video.play();
-        //Videoのオブザーバ追加
-
-
-    }
-    initName(name = "No Name", color = "gray", icon = NO_IMAGE){
-        this.name = name;
-        if(this.isStream){
-            this.element.name.innerHTML = name;
-            this.element.footer.style.backgroundColor = color;
-            this.pointer.style.backgroundColor = color;
-            this.color  = color;
-            this.icon   = icon;
+        let video = document.createElement("video");
+        video.srcObject = stream;
+        this.streams.set(stream.peerId,stream);
+        await video.play();
+        if(video.videoWidth>1){
+            this.video.srcObject = stream;
+            this.currentStream = stream;
+            await this.video.play();
+            this.isStream=true;
+            console.log("fin.");    
         }
+    }
+    async removeVideo(peerId){
+        this.stream.delete(peerId);
+        this.video.srcObject = Array.from(this.streams.values)[this.streams.size-1];
+        await this.video.play();
+        this.isStream = false;
+    }
+    async replaceVideo(peerId){
+        this.currentStream = this.streams.get(peerId) | this.currentStream;
+        this.video.srcObject = this.currentStream;
+        await this.video.play();
+        this.isStream = true;
+    }
+    async initName(){
+        let profile =  await Firebase.RTDB.get("profile/"+this.uid);
+        const {name = this.name, icon = this.icon, color = this.color} = profile;
+        this.name = name;
+        this.element.name.innerHTML = name;
+        this.element.footer.style.backgroundColor = color;
+        this.pointer.style.backgroundColor = color;
+        this.color  = color;
+        this.icon   = icon;
     }
     onChangeVideoSize(){
         //アスペクト比を計算、Canvasの中身保持をするか確認する
-        //Canvasの大きさ変更
-        if(this.video/*.RATIO ==this.ratio*/){
-            //Canvasのクリア
+        if(this.video.videoWidth<=1){
+            this.aspectRatio = 0;
+            this.isStream = false;
+            this.element.div.classList.add("hidden");
+            return false;
         }
+        //Canvasの大きさ変更
+        if(Math.round((this.video.videoWidth / this.video.videoHeight)*10)/10 !=this.ratio){
+            this.ratio = Math.round((this.video.videoWidth / this.video.videoHeight)*10)/10;
+            //Canvasのクリア
+        }  
         //canvasサイズを変更する   
+        this.canvas.forEach((cv)=>{
+            let width=this.video.videoWidth*2;
+            let height = this.video.videoHeight;
+            cv.resize(width,height);
+        },this);
+    }
+    addCanvas(drawerUid){
+        
+        if(drawerUid==this.uid){
+            var cv = new MyCanvas(this);
+        }else{
+            var cv = new Canvas(drawerUid,this);
+        }
+        cv.resize((this.video.videoWidth / this.video.videoHeight));
+        this.canvas.set(drawerUid,cv);
     }
 }
 class Canvas{
-    drawerPeerId;
+    canvas;
+    drawerUid;
+    videoUid
     context;
-    width;
-    height;
+    width=1;
+    height=1;
+    color="gray"; 
+    constructor(drawerUid,member){
+        this.drawerUid = drawerUid;
+        this.videoUid = member.uid;
+        this.canvas = document.createElement("canvas");
+        this.canvas.dataset.drawer=drawerUid;
+        this.canvas.dataset.source=member.uid;
+        this.canvas.width = this.width;
+        this.canvas.height = this.height;
+        this.context = this.canvas.getContext("2d");
+        this.color = member.color;
+        //append
+        member.element.videoDiv.appendChild(this.canvas);
+    }
     get ctx(){
         return this.context;
     }
-    init(width=600,height=600){}
+    resize(width=this.width,height=this.height){
+        this.canvas.width = width;
+        this.width = width;
+        this.canvas.height = height;
+        this.height = height;
+    }
+    resizeView(){}
     draw(){}
     clear(){}
     save(){}
@@ -194,6 +290,16 @@ class Canvas{
 }
 class MyCanvas extends Canvas{
     drawMode = false;
+    click = false;
+    constructor(member){
+        super(member.uid,member);
+        this.canvas.addEventListener("mouseenter",this.onMouseIn);
+        this.canvas.addEventListener("mouseout",this.onMouseOut);
+        this.canvas.addEventListener("mousedown",this.onClickdown);
+        this.canvas.addEventListener("mouseup",this.onClickup);
+    }
+    onClickdown(){}
+    onClickup(){}
     onMouseIn(){}
     onMouseOut(){}
 }
@@ -226,7 +332,8 @@ class ROOM{
         let uid = stream.peerId.split("-")[0];
         console.log(uid);
         ML.addMember(uid);
-        ML.l[uid].initVideo(stream);
+        await ML.l[uid].initVideo(stream);
+
 
     }
     async onData({data,src}){
@@ -243,6 +350,9 @@ class ROOM{
     }
     async onMemberJoin(peerId){
         //メンバの追加
+        let uid = stream.peerId.split("-")[0];
+        console.log(uid);
+        ML.addMember(uid);
         console.log(peerId,"Joined.");
     }
     async onMemberLeave(peerId){
@@ -253,6 +363,11 @@ class ROOM{
     }
     async onceJoin(){
         //自分が入室した際の挙動
+        ML.addMember(authInfo.uid);
+        localStream.peerId = peer.id;
+        await setTimeout(async() => {
+            await ML.l[authInfo.uid].initVideo(localStream);
+        }, 1000);
     }
     async onceLeave(){
         //自分が入室した際の挙動

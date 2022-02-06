@@ -19,6 +19,14 @@
                 <div style="width: 50px;height: 50px;border-radius: 50%;border: solod 1px gray;display: inline-block;background-size:contain;background-image:url('/img/noimage.png')"></div>
                 <span>ログイン</span>
             </div>
+            <input type="text" id="input-name" placeholder="名前">
+            <input type="radio" name="input-color" id="input-color-red" value="red">
+            <label for="input-color-red">赤</label>
+            <input type="radio" name="input-color" id="input-color-blue" value="blue">
+            <label for="input-color-blue">青</label>
+            <input type="radio" name="input-color" id="input-color-yellow" value="yellow">
+            <label for="input-color-yellow">黄</label>
+
             <video id="init-local-video"></video>
             <button id="join">参加</button>
         </div>
@@ -34,7 +42,7 @@
     </div>
     <script src="//cdn.webrtc.ecl.ntt.com/skyway-4.4.3.js"></script>
     <script src="./key/key.js"></script>
-    <script src="./firebase/firebaseAuth.js" type="module"></script>
+    <script src="./firebase/firebase.js" type="module"></script>
     <script src="./script.js"></script>
 </body>
 </html>
