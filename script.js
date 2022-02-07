@@ -293,23 +293,21 @@ class MyCanvas extends Canvas{
     static click = false;
     static sender = {};
     static Interval =-1;
-    static uid;
+    static pointer;
     constructor(member){
         super(member.uid,member);
         this.canvas.addEventListener("mouseenter",this.onMouseIn);
         this.canvas.addEventListener("mouseout",this.onMouseOut);
         this.canvas.addEventListener("mousedown",this.onClickdown);
         this.canvas.addEventListener("mouseup",this.onClickup);
-        this.uid = menber.uid;
+        this.pointer = menber.pointer;
     }
     onClickdown(e){
 
     }
     onClickup(e){}
     onMouseIn(e){
-        let pointer = document.querySelector(`.pointer[data-uid=${}]`)
-        pointer.classList.add("pointer");
-        pointer.classList.add("hidden");
+        this.pointer.classList.remove("hidden");
     }
     onMouseOut(e){
         this.pointer.classList.add("hidden");
