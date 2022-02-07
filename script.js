@@ -289,19 +289,36 @@ class Canvas{
     capture(){}
 }
 class MyCanvas extends Canvas{
-    drawMode = false;
-    click = false;
+    static drawMode = false;
+    static click = false;
+    static sender = {};
+    static Interval =-1;
+    static uid;
     constructor(member){
         super(member.uid,member);
         this.canvas.addEventListener("mouseenter",this.onMouseIn);
         this.canvas.addEventListener("mouseout",this.onMouseOut);
         this.canvas.addEventListener("mousedown",this.onClickdown);
         this.canvas.addEventListener("mouseup",this.onClickup);
+        this.uid = menber.uid;
     }
-    onClickdown(){}
-    onClickup(){}
-    onMouseIn(){}
-    onMouseOut(){}
+    onClickdown(e){
+
+    }
+    onClickup(e){}
+    onMouseIn(e){
+        let pointer = document.querySelector(`.pointer[data-uid=${}]`)
+        pointer.classList.add("pointer");
+        pointer.classList.add("hidden");
+    }
+    onMouseOut(e){
+        this.pointer.classList.add("hidden");
+        if(this.click){
+            //描画終了合図
+        }
+        this.click = false;
+    }
+
 }
 class ROOM{
     //部屋に入る処理を行う
