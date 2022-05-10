@@ -172,10 +172,9 @@ class Member{
         this.element.div.appendChild(this.element.footer);
         this.video = this.element.video;
         document.getElementById("stream").appendChild(this.element.div);
-
         //TODO Videoオブザーバー設置
-
         this.addCanvas("background",this);
+        this.onChangeVideoSize();
     }
     addPeer(peerId){
         this.peers.push(peerId);
@@ -300,7 +299,7 @@ class MyCanvas extends Canvas{
         this.canvas.addEventListener("mouseout",this.onMouseOut);
         this.canvas.addEventListener("mousedown",this.onClickdown);
         this.canvas.addEventListener("mouseup",this.onClickup);
-        this.pointer = menber.pointer;
+        this.pointer = member.pointer;
     }
     onClickdown(e){
 
@@ -318,6 +317,7 @@ class MyCanvas extends Canvas{
     }
 
 }
+
 class ROOM{
     //部屋に入る処理を行う
     room = null;
