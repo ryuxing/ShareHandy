@@ -237,7 +237,7 @@ class Member{
                 let height = this.video.videoHeight*2;
                 cv.resize(1,1);
                 cv.resize(width,height);
-                cv.resizeView(this.video.width,this.video.height);
+                cv.resizeView(this.video.clientWidth,this.video.clientHeight);
             },this);
         }else{
 
