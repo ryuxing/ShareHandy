@@ -196,6 +196,7 @@ class Member{
             this.isStream=true;
             console.log("fin.");    
         }
+        this.onChangeVideoSize();
     }
     async removeVideo(peerId){
         this.stream.delete(peerId);
