@@ -244,8 +244,8 @@ class Member{
         }
         //canvasサイズを変更する   
         this.canvas.forEach((cv)=>{
-            let width=this.video.width;
-            let height = this.video.height;
+            let width=this.video.clientWidth;
+            let height = this.video.clientHeight;
             cv.resizeView(width,height);
         },this);
     }
