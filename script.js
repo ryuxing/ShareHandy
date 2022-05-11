@@ -237,6 +237,7 @@ class Member{
                 let height = this.video.videoHeight*2;
                 cv.resize(1,1);
                 cv.resize(width,height);
+                console.log(width,height,this.video.clientWidth,this.video.clientHeight);
                 cv.resizeView(this.video.clientWidth,this.video.clientHeight);
             },this);
         }else{
@@ -276,6 +277,8 @@ class Canvas{
         this.canvas.dataset.source=member.uid;
         this.canvas.width = this.width;
         this.canvas.height = this.height;
+        this.canvas.style.width="0px";
+        this.canvas.style.height="0px";
         this.context = this.canvas.getContext("2d");
         this.color = member.color;
         //append
@@ -290,9 +293,10 @@ class Canvas{
         this.canvas.height = height;
         this.height = height;
     }
-    resizeView(width="100%",height="100%"){
-        this.canvas.style.width=width;
-        this.canvas.style.height=height;
+    resizeView(width="100",height="100"){
+        this.canvas.style.width=width +"px";
+        this.canvas.style.height=height+"px";
+        console.log(width,height)
     }
     draw(list){
         for(var i of list){
@@ -318,35 +322,66 @@ class Canvas{
 class MyCanvas extends Canvas{
     static drawMode = false;
     static click = false;
+    static isDrawing= false;
     static sender = {};
     static Interval =-1;
     static pointer;
+    static queue = {
+        menber : "",
+        queue : []
+    };
     constructor(member){
         super(member.uid,member);
         this.canvas.addEventListener("mouseenter",this.onMouseIn);
         this.canvas.addEventListener("mouseout",this.onMouseOut);
         this.canvas.addEventListener("mousedown",this.onClickdown);
         this.canvas.addEventListener("mouseup",this.onClickup);
+        this.canvas.addEventListener("mousemove",this.onMouseMove);
         this.pointer = member.pointer;
+        this.queue.member = this.drawerUid;
     }
     onClickdown(e){
         this.click = true;
     }
     onClickup(e){
         this.click = false;
+        this.isDrawing = false;
 
     }
     onMouseIn(e){
-        this.pointer.classList.remove("hidden");
+        //this.pointer.classList.remove("hidden");
+        console.log("MouseIn");
+        console.log(e);
+        this.isDrawing=false;
 
     }
+    onMouseMove(e){
+        console.log("MouseMove");
+        console.log(e.offsetX,e.offsetY);
+        if(this.click && this.drawMode){
+            if(!this.isDrawing){
+                this.isDrawing=true;
+                var send = ["s",e.offsetX,e.offsetY];
+                this.queue.queue.push(send);
+                this.draw([send]);
+            }else{
+                this.isDrawing=true;
+                var send = [e.offsetX,e.offsetY];
+                this.queue.queue.push(send);
+                this.draw([send]);
+            }
+            //送る処理
+        }
+    }
     onMouseOut(e){
-        this.pointer.classList.add("hidden");
+        //this.pointer.classList.add("hidden");
         if(this.click){
+            console.log("MouseOut");
             console.log(e);
             //描画終了合図
         }
         this.click = false;
+        this.isDrawing=false;
     }
 
 }
