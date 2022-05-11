@@ -220,23 +220,35 @@ class Member{
         this.icon   = icon;
     }
     onChangeVideoSize(){
-        //アスペクト比を計算、Canvasの中身保持をするか確認する
+
         if(this.video.videoWidth<=1){
             this.aspectRatio = 0;
             this.isStream = false;
             this.element.div.classList.add("hidden");
+            this.canvas.forEach((cv)=>{
+                cv.resizeView(width,height);
+            },this);
             return false;
         }
-        //Canvasの大きさ変更
+        //アスペクト比を計算、Canvasの中身保持をするか確認する
         if(Math.round((this.video.videoWidth / this.video.videoHeight)*10)/10 !=this.ratio){
             this.ratio = Math.round((this.video.videoWidth / this.video.videoHeight)*10)/10;
             //Canvasのクリア
-        }  
+            this.canvas.forEach((cv)=>{
+                let width=this.video.videoWidth*2;
+                let height = this.video.videoHeight*2;
+                cv.resize(1,1);
+                cv.resize(width,height);
+                cv.resizeView(this.video.width,this.video.height);
+            },this);
+        }else{
+
+        }
         //canvasサイズを変更する   
         this.canvas.forEach((cv)=>{
-            let width=this.video.videoWidth*2;
-            let height = this.video.videoHeight;
-            cv.resize(width,height);
+            let width=this.video.width;
+            let height = this.video.height;
+            cv.resizeView(width,height);
         },this);
     }
     addCanvas(drawerUid){
@@ -246,7 +258,7 @@ class Member{
         }else{
             var cv = new Canvas(drawerUid,this);
         }
-        cv.resize((this.video.videoWidth / this.video.videoHeight));
+        cv.resize(this.video.videoWidth, this.video.videoHeight);
         this.canvas.set(drawerUid,cv);
     }
 }
@@ -280,8 +292,26 @@ class Canvas{
         this.canvas.height = height;
         this.height = height;
     }
-    resizeView(){}
-    draw(){}
+    resizeView(width="100%",height="100%"){
+        this.canvas.style.width=width;
+        this.canvas.style.height=height;
+    }
+    draw(list){
+        for(var i of list){
+            if(i.length!=(2||3)) continue;
+            else if(i[0] =="s"){
+                this.ctx.beginPath();
+                this.ctx.strokeStyle = this.color;
+                this.ctx.lineWidth = 5;
+                this.ctx.moveTo(i[1],i[2]);
+
+            }
+            else if(0 <= i[0] && i[0] <= this.width  &&  0<= i[1] && i[1] <= this.height){
+                this.ctx.lineTo(i[0],i[1]);
+            }
+        }
+        this.ctx.stroke();
+    }
     clear(){}
     save(){}
     eraser(){}
@@ -302,15 +332,20 @@ class MyCanvas extends Canvas{
         this.pointer = member.pointer;
     }
     onClickdown(e){
+        this.click = true;
+    }
+    onClickup(e){
+        this.click = false;
 
     }
-    onClickup(e){}
     onMouseIn(e){
         this.pointer.classList.remove("hidden");
+
     }
     onMouseOut(e){
         this.pointer.classList.add("hidden");
         if(this.click){
+            console.log(e);
             //描画終了合図
         }
         this.click = false;
