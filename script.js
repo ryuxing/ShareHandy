@@ -225,9 +225,6 @@ class Member{
             this.aspectRatio = 0;
             this.isStream = false;
             this.element.div.classList.add("hidden");
-            this.canvas.forEach((cv)=>{
-                cv.resizeView(width,height);
-            },this);
             return false;
         }
         //アスペクト比を計算、Canvasの中身保持をするか確認する
