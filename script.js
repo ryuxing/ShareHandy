@@ -253,15 +253,15 @@ class Member{
     addCanvas(drawerUid){
         
         if(drawerUid==this.uid){
-            var cv = new MyCanvas(this);
+            var cv = new MyCv(this);
         }else{
-            var cv = new Canvas(drawerUid,this);
+            var cv = new Cv(drawerUid,this);
         }
         cv.resize(this.video.videoWidth, this.video.videoHeight);
         this.canvas.set(drawerUid,cv);
     }
 }
-class Canvas{
+class Cv{
     canvas;
     drawerUid;
     videoUid
@@ -313,23 +313,20 @@ class Canvas{
             }
         }
         this.ctx.stroke();
+        console.log("storoke",list);
     }
     clear(){}
     save(){}
     eraser(){}
     capture(){}
 }
-class MyCanvas extends Canvas{
-    static drawMode = false;
-    static click = false;
+class MyCv extends Cv{
+    static drawMode = true;
+    static isClick = false;
     static isDrawing= false;
     static sender = {};
     static Interval =-1;
     static pointer;
-    static queue = {
-        menber : "",
-        queue : []
-    };
     constructor(member){
         super(member.uid,member);
         this.canvas.addEventListener("mouseenter",this.onMouseIn);
@@ -338,50 +335,57 @@ class MyCanvas extends Canvas{
         this.canvas.addEventListener("mouseup",this.onClickup);
         this.canvas.addEventListener("mousemove",this.onMouseMove);
         this.pointer = member.pointer;
-        this.queue.member = this.drawerUid;
+        this.queue = {
+            member : this.drawerUid,
+            queue : new Array()
+        };    
     }
     onClickdown(e){
-        this.click = true;
+        MyCv.isClick = true;
     }
     onClickup(e){
-        this.click = false;
-        this.isDrawing = false;
+        MyCv.isClick = false;
+        MyCv.isDrawing = false;
 
     }
     onMouseIn(e){
         //this.pointer.classList.remove("hidden");
         console.log("MouseIn");
         console.log(e);
-        this.isDrawing=false;
+        MyCv.isDrawing=false;
 
     }
     onMouseMove(e){
         console.log("MouseMove");
         console.log(e.offsetX,e.offsetY);
-        if(this.click && this.drawMode){
-            if(!this.isDrawing){
-                this.isDrawing=true;
+        console.log(MyCv.isClick,MyCv.drawMode,MyCv.isDrawing);
+        if(MyCv.isClick && MyCv.drawMode){
+            if(!MyCv.isDrawing){
+                MyCv.isDrawing=true;
                 var send = ["s",e.offsetX,e.offsetY];
-                this.queue.queue.push(send);
+                //this.queue.queue.push(send);
                 this.draw([send]);
+                console.log("Start");
             }else{
-                this.isDrawing=true;
+                MyCv.isDrawing=true;
                 var send = [e.offsetX,e.offsetY];
-                this.queue.queue.push(send);
+                //this.queue.queue.push(send);
+                console.log(this);
                 this.draw([send]);
+                console.log("->")
             }
             //送る処理
         }
     }
     onMouseOut(e){
         //this.pointer.classList.add("hidden");
-        if(this.click){
+        if(MyCv.isClick){
             console.log("MouseOut");
             console.log(e);
             //描画終了合図
         }
-        this.click = false;
-        this.isDrawing=false;
+        MyCv.isClick = false;
+        MyCv.isDrawing=false;
     }
 
 }
