@@ -72,7 +72,6 @@ async function initAccountStatus(elem, onlyDisplay){
         document.getElementById("join").removeEventListener("click",joinRoom);
         if(window.peer != undefined){
             peer.destroy();
-            delete peer;
         }
         authInfo = null;
     }
