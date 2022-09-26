@@ -1,7 +1,7 @@
 // Import the functions from the SDKs
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.6/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.6.6/firebase-analytics.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut} from "https://www.gstatic.com/firebasejs/9.6.6/firebase-auth.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut,setPersistence} from "https://www.gstatic.com/firebasejs/9.6.6/firebase-auth.js";
 import { getDatabase, ref, set, get, child} from "https://www.gstatic.com/firebasejs/9.6.6/firebase-database.js"
 
 // Initialize Firebase

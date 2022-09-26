@@ -1,10 +1,16 @@
+import { Member } from "./Member.js";
+
 export {Room}
 class Room{
     //部屋に入る処理を行う
     room = null;
     members =[]
+    static myPeerId="";
+    myStream;
     constructor(roomId,stream){
+        this.myStream = stream
         try{
+            console.log(window.peer)
             this.room = window.peer.joinRoom(roomId, {
                 mode: "sfu",
                 stream: stream
@@ -18,7 +24,7 @@ class Room{
         this.room.on('stream',this.onStream);
         this.room.on('data',this.onData);
         this.room.on('peerLeave',this.onMemberLeave);
-        this.room.once('open',this.onceJoin);
+        this.room.once('open',this.onceJoin,this);
         this.room.once('close',this.onceLeave);        
         return this;
     }
@@ -28,8 +34,7 @@ class Room{
         //await ML.list[stream.peerId].initVideo(stream);
         let uid = stream.peerId.split("-")[0];
         console.log(uid);
-        ML.addMember(uid);
-        await ML.l[uid].initVideo(stream);
+        Member.addStream(stream.peerId,stream)
 
 
     }
@@ -47,9 +52,15 @@ class Room{
     }
     async onMemberJoin(peerId){
         //メンバの追加
-        let uid = stream.peerId.split("-")[0];
+        /*let uid = stream.peerId.split("-")[0];
         console.log(uid);
-        ML.addMember(uid);
+        ML.addMember(uid);*/
+        console.log(this)
+        Member.addPeer(window.peer.id);
+        console.log(this._localStream)
+        if(this._localStream != undefined){
+        }
+
         console.log(peerId,"Joined.");
     }
     async onMemberLeave(peerId){
@@ -60,11 +71,16 @@ class Room{
     }
     async onceJoin(){
         //自分が入室した際の挙動
-        ML.addMember(authInfo.uid);
-        localStream.peerId = peer.id;
-        await setTimeout(async() => {
-            await ML.l[authInfo.uid].initVideo(localStream);
-        }, 1000);
+        console.log(this)
+        Member.addPeer(window.peer.id);
+        console.log(this._localStream)
+        if(this._localStream != undefined){
+            Member.addStream(window.peer.id, this._localStream)
+        }
+        
+        /*await setTimeout(async() => {
+            await Member.list[Room.toUid(window.peer.id)].initVideo(this.myStream);
+        }, 1000);*/
     }
     async onceLeave(){
         //自分が退室した際の挙動
@@ -78,5 +94,12 @@ class Room{
         return ret;
     }
 
+
+    //PeerとMemberの変換
+    static toUid(peerId){
+        console.log(peerId)
+        let uid = peerId.split("-")[0];
+        return uid
+    }
 
 }

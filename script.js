@@ -1,12 +1,12 @@
-import {DrawCanvas, MyCanvas, Painter} from "js/Canvas.js";
-import {Room} from "js/Room.js";
-import {Member} from "js/Member"
+import {DrawCanvas, MyCanvas, Painter} from "./js/Canvas.js";
+import {Room} from "./js/Room.js";
+import {Member} from "./js/Member.js"
 
-var Room=null;
+var room=null;
 var localStream = null;
 var stream;
 const NO_STREAM = getEmptyStream();
-authInfo = null;
+var authInfo = null;
 window.onload = async()=>{
     localStream = await navigator.mediaDevices
         .getUserMedia({
@@ -37,6 +37,7 @@ function getEmptyStream(){
 
     return new MediaStream([vstream.getTracks()[0],astream.getTracks()[0]]);
 }
+var peerId
 async function initAccountStatus(elem, onlyDisplay){
     if(Firebase.Auth.auth.currentUser==null){
         //サインイン
@@ -51,7 +52,8 @@ async function initAccountStatus(elem, onlyDisplay){
         let digits = 36 ** 5;
         peerId = authInfo.uid + "-"+ (new Date().getTime()).toString(36)+ (Math.floor(Math.random())*digits).toString(36);
         console.log(peerId);
-        window.peer = new Peer(peerId,{key: window.__SKYWAY_KEY__,debug:1});
+        
+        window.peer = await new Peer(peerId,{key: window.__SKYWAY_KEY__,debug:1});
         console.log(peer);
         let profile = await Firebase.RTDB.get("profile/"+authInfo.uid);
         console.log(!("name" in profile));
@@ -85,7 +87,8 @@ async function joinRoom(){
         color: document.querySelector("input[name=input-color]:checked").value
     }
     await Firebase.RTDB.set("profile/"+authInfo.uid,profile);
-    window.Room = new ROOM(RoomId,localStream);
+    Room.myPeerId = window.peer.id;
+    window.Room = new Room(RoomId,localStream);
     document.getElementById("join").removeEventListener("click",joinRoom);
 
 }
