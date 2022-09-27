@@ -66,6 +66,7 @@ class MyCanvas extends DrawCanvas{
     static pointer;
     static queue = []
     constructor(member){
+        this.canvas.classList.add("mycv")
         super(Room.toUid(window.peer.id),member);
         this.canvas.addEventListener("mouseenter",this.onMouseIn);
         this.canvas.addEventListener("mouseout",this.onMouseOut);
